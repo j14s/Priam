@@ -39,6 +39,14 @@ import com.netflix.priam.cryptography.pgp.PgpCredential;
 import com.netflix.priam.restore.EncryptedRestoreStrategy;
 import com.netflix.priam.restore.IRestoreStrategy;
 import com.netflix.priam.ICredential;
+import com.netflix.priam.aws.IAMCredential;
+// from 2.0x
+import com.netflix.priam.identity.token.DeadTokenRetriever;
+import com.netflix.priam.identity.token.IDeadTokenRetriever;
+import com.netflix.priam.identity.token.INewTokenRetriever;
+import com.netflix.priam.identity.token.IPreGeneratedTokenRetriever;
+import com.netflix.priam.identity.token.NewTokenRetriever;
+import com.netflix.priam.identity.token.PreGeneratedTokenRetriever;
 
 
 public class PriamGuiceModule extends AbstractModule
@@ -55,6 +63,10 @@ public class PriamGuiceModule extends AbstractModule
         
         bind(S3CrossAccountFileSystem.class);
         bind(IFileSystemContext.class).annotatedWith(Names.named("backup")).to(BackupFileSystemContext.class);
+// from 2.0x
+        bind(IDeadTokenRetriever.class).to(DeadTokenRetriever.class);
+        bind(IPreGeneratedTokenRetriever.class).to(PreGeneratedTokenRetriever.class);
+        bind(INewTokenRetriever.class).to(NewTokenRetriever.class);
         
         bind(IBackupFileSystem.class).annotatedWith(Names.named("gcsencryptedbackup")).to(GoogleEncryptedFileSystem.class);
         bind(IS3Credential.class).annotatedWith(Names.named("awsroleassumption")).to(S3RoleAssumptionCredential.class);
@@ -62,6 +74,7 @@ public class PriamGuiceModule extends AbstractModule
         bind(ICredentialGeneric.class).annotatedWith(Names.named("gcscredential")).to(GcsCredential.class);
         bind(ICredentialGeneric.class).annotatedWith(Names.named("pgpcredential")).to(PgpCredential.class);
         bind(IRestoreStrategy.class).annotatedWith(Names.named("encryptedrestore")).to(EncryptedRestoreStrategy.class);
-        bind(ICredential.class).to(ClearCredential.class);
+        bind(ICredential.class).to(IAMCredential.class);
+        // bind(ICredential.class).to(ClearCredential.class);
     }
 }
