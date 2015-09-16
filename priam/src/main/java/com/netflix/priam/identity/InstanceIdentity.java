@@ -316,7 +316,7 @@ logger.info("Adding other seeds");
         }
 if (seeds.isEmpty()) {
 logger.info("seed list empty, gonna have to fake it");
-seeds.add("10.91.13.5");
+seeds.add("127.0.0.1");
 } else {
 logger.info("returning " + seeds.size() + " seeds.");
 }
