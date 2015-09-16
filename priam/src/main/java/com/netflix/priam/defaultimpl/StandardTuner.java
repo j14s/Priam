@@ -81,6 +81,8 @@ public class StandardTuner implements CassandraTuner
         map.put("concurrent_writes", config.getConcurrentWritesCnt());
         map.put("concurrent_compactors", config.getConcurrentCompactorsCnt());
         
+        map.put("rpc_min_threads","4");
+        map.put("rpc_max_threads","16");
         map.put("rpc_server_type", config.getRpcServerType());
         //map.put("index_interval", config.getIndexInterval());
         
