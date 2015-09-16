@@ -124,6 +124,7 @@ public class S3FileSystem extends S3FileSystemBase implements IBackupFileSystem,
     @Override
     public void upload(AbstractBackupPath path, InputStream in) throws BackupRestoreException
     {
+        logger.info(String.format("Uploading to %s/%s", config.getBackupPrefix(), path.getRemotePath()));
         super.uploadCount.incrementAndGet();
         AmazonS3 s3Client = super.getS3Client();
         InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest(config.getBackupPrefix(), path.getRemotePath());
