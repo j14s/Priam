@@ -85,6 +85,7 @@ public abstract class AbstractBackup extends Task
                     public AbstractBackupPath retriableCall() throws Exception
                     {
                         final AbstractBackupPath bp = pathFactory.get();
+			logger.info(String.format("Uploading backup to %s", bp.getRemotePath()));
                         bp.parseLocal(file, type);
                         upload(bp);
                         file.delete();
