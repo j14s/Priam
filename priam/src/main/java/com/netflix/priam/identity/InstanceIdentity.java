@@ -305,7 +305,9 @@ logger.info("oh surprise, i'm a single zone instance and couldn't find a second 
 logger.info("Adding other seeds");
         for (String loc : locMap.keySet())
         {
+logger.info("From location:" + loc);
         		PriamInstance instance = Iterables.tryFind(locMap.get(loc), differentHostPredicate).orNull();
+logger.info("Location has an instance:" + (instance != null? instance.toString():"null"));
         		if (instance != null && !isInstanceDummy(instance))
         		{
         			if (config.isMultiDC())
