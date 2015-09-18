@@ -82,7 +82,7 @@ public class InstanceIdentity
     private final Predicate<PriamInstance> differentHostPredicate = new Predicate<PriamInstance>() {
     		@Override
     		public boolean apply(PriamInstance instance) {
-    			return (!instance.getInstanceId().equalsIgnoreCase(DUMMY_INSTANCE_ID) && !instance.getHostName().equals(myInstance.getHostName()));
+    			return (!instance.getInstanceId().equalsIgnoreCase(DUMMY_INSTANCE_ID) && !instance.getInstanceId().equals(myInstance.getInstanceId()));
     		}
     };
    
@@ -267,7 +267,7 @@ public class InstanceIdentity
         List<PriamInstance> instances = factory.getAllIds(config.getAppName()); 
         for (PriamInstance ins : instances)
         {
-logger.info("found a location");
+logger.info("found an instance:" + ins.toString() + " in rack: " + ins.getRac());
         		locMap.put(ins.getRac(), ins);
         }
     }
