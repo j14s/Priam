@@ -38,6 +38,11 @@ public interface IConfiguration
     public String getYamlLocation();
 
     /**
+     * @return The IConfigSource initialized with
+     */
+    IConfigSource getConfigSource();
+
+    /**
      * @return Path to Cassandra startup script
      */
     public String getCassStartupScript();

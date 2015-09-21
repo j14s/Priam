@@ -3,6 +3,8 @@ package com.netflix.priam;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.netflix.priam.defaultimpl.PriamConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Properties;
@@ -18,6 +20,7 @@ public final class SystemPropertiesConfigSource extends AbstractConfigSource
     private static final String BLANK = "";
 
     private final Map<String, String> data = Maps.newConcurrentMap();
+    private static final Logger logger = LoggerFactory.getLogger(SystemPropertiesConfigSource.class.getName());
 
     @Override
     public void intialize(final String asgName, final String region) 
@@ -33,6 +36,7 @@ public final class SystemPropertiesConfigSource extends AbstractConfigSource
             final String value = systemProps.getProperty(key);
             if (value != null && !BLANK.equals(value)) 
             {
+                logger.debug("Adding property {} with value {}", key, value);
                 data.put(key, value);
             }
         }
@@ -54,6 +58,7 @@ public final class SystemPropertiesConfigSource extends AbstractConfigSource
     public void set(final String key, final String value) 
     {
         Preconditions.checkNotNull(value, "Value can not be null for configurations.");
+        logger.debug("Setting property {} with value {}", key, value);
         data.put(key, value);
     }
 }

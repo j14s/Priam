@@ -15,6 +15,9 @@
  */
 package com.netflix.priam;
 
+import com.netflix.priam.defaultimpl.PriamConfigSource;
+import com.netflix.priam.defaultimpl.PriamConfiguration;
+import com.netflix.priam.identity.PriamInstance;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +39,8 @@ import com.netflix.priam.scheduler.PriamScheduler;
 import com.netflix.priam.utils.CassandraMonitor;
 import com.netflix.priam.utils.Sleeper;
 import com.netflix.priam.utils.TuneCassandra;
+
+import java.util.LinkedList;
 
 /**
  * Start all tasks here - Property update task - Backup task - Restore task -
@@ -67,6 +72,23 @@ public class PriamServer
         if (id.getInstance().isOutOfService())
             return;
 
+        // sanity check, does config have any instances besides myself?
+        LinkedList<String> seeds = (LinkedList<String>) id.getSeeds();
+        if (seeds.size() == 0) try {
+            // if not check if config has been saved to sdb, save if not
+            ((PriamConfigSource)config.getConfigSource()).rollup();
+            ((PriamConfigSource)config.getConfigSource()).save();
+            //        reconfig without autobootstrap,
+            ((PriamConfiguration)config).disableAutoBootstrap();
+            //        tricky .. once other seeds join, stop/reconfig/start?
+            // maybe use node tool .. possibly set a flag here and have the existing
+            // monitor task ask cassandra to re-fetch seeds .. it's possible it would
+            // happen naturally anyway.
+        } catch (ClassCastException cce) {
+            logger.info("Unable to rollup and save final configuration, oh well..", cce);
+        }
+
+        // if so, continue on
         // start to schedule jobs
         scheduler.start();
 

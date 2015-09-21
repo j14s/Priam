@@ -4,6 +4,7 @@ import com.google.inject.ImplementedBy;
 import com.netflix.priam.defaultimpl.PriamConfigSource;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Defines the configurations for an application.
@@ -145,4 +146,16 @@ public interface IConfigSource
      * @param value to set.
      */
     void set(String key, String value);
+
+    /**
+     * Write a configuration back to it's source. Intended to be implemented by
+     * database backed sources. File sources should throw UnsupportedOperationException
+     */
+    void save() throws UnsupportedOperationException;
+
+    /**
+     * get access to the list of keys
+     * @return the set of keys from the map data.
+     */
+     Set<String> keySet();
 }

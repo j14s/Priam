@@ -71,19 +71,19 @@ public class CassandraProcessManager implements ICassandraProcess
         logger.info("Start env: " + startCass.environment().toString());
         Process starter = startCass.start();
         
-        logger.info("Starting cassandra server ....");
+        logger.info("Requesting cassandra server start....");
 		try {
 			sleeper.sleepQuietly(SCRIPT_EXECUTE_WAIT_TIME_MS);
 			int code = starter.exitValue();
 			if (code == 0)
-				logger.info("Cassandra server has been started");
+				logger.info("Call to start Cassandra service exited with success.");
 			else
-				logger.error("Unable to start cassandra server. Error code: {}", code);
+				logger.error("Cassandra service failed. Exit code: {}", code);
 
 			logProcessOutput(starter);
 		} catch (Exception e) 
-                {
-                     logger.warn("Starting Cassandra has an error", e);
+        {
+            logger.warn("Exception calling Cassandra service start:", e);
 		}
     }
 

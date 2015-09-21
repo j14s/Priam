@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -204,5 +205,12 @@ public abstract class AbstractConfigSource implements IConfigSource
         }
         return list;
     }
-
+    public String toString() {
+        String rv = (this.getClass().toString());
+        return (rv + " for " + getAsgName() + " in " + getRegion());
+    }
+    public Set<String> keySet() { return null; }
+    public void save() throws UnsupportedOperationException {
+        throw new UnsupportedOperationException("Not allowed to save configurations from this source.");
+    }
 }

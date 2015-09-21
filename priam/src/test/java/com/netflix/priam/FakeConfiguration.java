@@ -428,6 +428,11 @@ public class FakeConfiguration implements IConfiguration
         return "conf/cassandra.yaml";
     }
 
+    @Override
+    public IConfigSource getConfigSource() {
+        return null;
+    }
+
     public String getAuthenticator()
     {
         return PriamConfiguration.DEFAULT_AUTHENTICATOR;

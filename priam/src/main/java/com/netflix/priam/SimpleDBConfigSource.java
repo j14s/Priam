@@ -1,19 +1,17 @@
 package com.netflix.priam;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
-import com.amazonaws.services.simpledb.model.Attribute;
-import com.amazonaws.services.simpledb.model.Item;
-import com.amazonaws.services.simpledb.model.SelectRequest;
-import com.amazonaws.services.simpledb.model.SelectResult;
+import com.amazonaws.services.simpledb.model.*;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.netflix.priam.identity.PriamInstance;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Loads config data from SimpleDB.  {@link #intialize(String, String)} will query the SimpleDB domain "PriamProperties"
@@ -38,6 +36,8 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
     private final Map<String, String> data = Maps.newConcurrentMap();
     private final ICredential provider;
 
+    private String appid;
+
     @Inject
     public SimpleDBConfigSource(final ICredential provider) 
     {
@@ -53,7 +53,7 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
         AmazonSimpleDBClient simpleDBClient = new AmazonSimpleDBClient(provider.getAwsCredentialProvider());
 
         String nextToken = null;
-        String appid = asgName.lastIndexOf('-') > 0 ? asgName.substring(0, asgName.indexOf('-')) : asgName;
+        this.appid = asgName.lastIndexOf('-') > 0 ? asgName.substring(0, asgName.indexOf('-')) : asgName;
         logger.info(String.format("appid used to fetch properties is: %s", appid));
         do 
         {
@@ -71,7 +71,7 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
 
     private static class Attributes 
     {
-        public final static String APP_ID = "appId"; // ASG
+        public final static String APP_ID = "appId"; // ASG or first part thereof
         public final static String PROPERTY = "property";
         public final static String PROPERTY_VALUE = "value";
         public final static String REGION = "region";
@@ -99,6 +99,7 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
         // Override only if region is specified
         if (data.containsKey(prop) && StringUtils.isBlank(dc))
             return;
+        logger.debug("Adding property {} with value {}",prop,value);
         data.put(prop, value);
     }
 
@@ -115,9 +116,31 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
     }
 
     @Override
-    public void set(final String key, final String value) 
+    public void set(final String key, final String value)
     {
         Preconditions.checkNotNull(value, "Value can not be null for configurations.");
+        logger.debug("Setting property {} with value {}", key, value);
         data.put(key, value);
+    }
+    public Set<String> keySet() {
+        return data.keySet();
+    }
+    public void save() {
+        // create a put request with attributes
+        List<ReplaceableAttribute> attrs = new ArrayList<ReplaceableAttribute>();
+        for (String key : data.keySet()) {
+            String value = data.get(key);
+            if (value != null && !value.isEmpty())
+                attrs.add(new ReplaceableAttribute(key, value, false)); // lazy way of making sure we don't overwrite if this was all some kind of mistake
+
+        }
+        try {
+            AmazonSimpleDBClient simpleDBClient = new AmazonSimpleDBClient(provider.getAwsCredentialProvider());
+            PutAttributesRequest putReq = new PutAttributesRequest(DOMAIN, appid, attrs);
+            simpleDBClient.putAttributes(putReq);
+        }
+        catch (AmazonServiceException ase) {
+            // log msg about how sorry i am
+        }
     }
 }

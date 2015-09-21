@@ -239,6 +239,11 @@ public class PriamConfiguration implements IConfiguration
         catch (RuntimeException ex) {
             // swallow
         }
+        // sanity check, does config have any instances besides myself?
+        // if so, continue on
+        // if not check if config has been saved to sdb, save if not
+        //        reconfig without autobootstrap,
+        //        tricky .. once other seeds join, stop/reconfig/start
         try {
             p_ip = SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/public-ipv4").trim();
         }
@@ -250,6 +255,8 @@ public class PriamConfiguration implements IConfiguration
         this.provider = provider;
         this.config = config;
     }
+
+    public IConfigSource getConfigSource() { return config;}
 
     @Override
     public void intialize()
@@ -932,7 +939,10 @@ public class PriamConfiguration implements IConfiguration
     public String getCassYamlVal(String priamKey) {
     	return config.get(priamKey);
     }
-    
+
+    public void disableAutoBootstrap() {
+        config.set(CONFIG_AUTO_BOOTSTRAP,"false");
+    }
     public boolean getAutoBoostrap() {
         return config.get(CONFIG_AUTO_BOOTSTRAP, true);
     }

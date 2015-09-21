@@ -78,6 +78,7 @@ public class PropertiesConfigSource extends AbstractConfigSource
     public void set(final String key, final String value) 
     {
         Preconditions.checkNotNull(value, "Value can not be null for configurations.");
+        logger.debug("Setting property {} with value {}", key, value);
         data.put(key, value);
     }
 
@@ -110,6 +111,7 @@ public class PropertiesConfigSource extends AbstractConfigSource
                 final String value = properties.getProperty(key);
                 if (!Strings.isNullOrEmpty(value)) 
                 {
+                    logger.debug("Adding property {} with value {}", key, value);
                     data.put(key, value);
                 }
             }

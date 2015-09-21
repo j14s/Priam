@@ -267,30 +267,31 @@ public class InstanceIdentity
         List<PriamInstance> instances = factory.getAllIds(config.getAppName()); 
         for (PriamInstance ins : instances)
         {
-logger.info("found an instance:" + ins.toString() + " in rack: " + ins.getRac());
-        		locMap.put(ins.getRac(), ins);
+            logger.debug("found an instance:" + ins.toString() + " in rack: " + ins.getRac());
+            locMap.put(ins.getRac(), ins);
         }
     }
 
     public List<String> getSeeds() throws UnknownHostException
     {
-logger.info("getSeeds() - entry");
+        logger.trace("getSeeds() - entry");
         populateRacMap();
         List<String> seeds = new LinkedList<String>();
         // Handle single zone deployment
         if (config.getRacs().size() == 1)
         {
-logger.info("I'm a single zone");
+            logger.trace("I'm a single zone");
             // Return empty list if all nodes are not up
             if (membership.getRacMembershipSize() != locMap.get(myInstance.getRac()).size()) {
-logger.info("I don't think all my nodes are up yet");
+                logger.debug("I don't think all my nodes are up yet");
                 return seeds;
-}
+            }
             // If seed node, return the next node in the list
             if (locMap.get(myInstance.getRac()).size() > 1 && locMap.get(myInstance.getRac()).get(0).getHostIP().equals(myInstance.getHostIP()))
             {	
-logger.info("I'm a seed node, but in a single zone instance?");
+                logger.trace("I'm a seed node, but in a single zone instance?");
             	PriamInstance instance = locMap.get(myInstance.getRac()).get(1);
+                logger.debug("Location has an instance:" + (instance != null? instance.toString():"null"));
             	if (instance != null && !isInstanceDummy(instance))
             	{
             	    if (config.isMultiDC())
@@ -298,16 +299,16 @@ logger.info("I'm a seed node, but in a single zone instance?");
             	    else 
             		   seeds.add(instance.getHostName());
                 } else {
-logger.info("oh surprise, i'm a single zone instance and couldn't find a second node .. wtf");
-}
+                    logger.trace("Instance is no good.");
+                }
             }
         }
-logger.info("Adding other seeds");
+        logger.trace("Adding other seeds");
         for (String loc : locMap.keySet())
         {
-logger.info("From location:" + loc);
-        		PriamInstance instance = Iterables.tryFind(locMap.get(loc), differentHostPredicate).orNull();
-logger.info("Location has an instance:" + (instance != null? instance.toString():"null"));
+            logger.debug("From location:" + loc);
+            PriamInstance instance = Iterables.tryFind(locMap.get(loc), differentHostPredicate).orNull();
+            logger.debug("Location has an instance:" + (instance != null? instance.toString():"null"));
         		if (instance != null && !isInstanceDummy(instance))
         		{
         			if (config.isMultiDC())
@@ -316,12 +317,11 @@ logger.info("Location has an instance:" + (instance != null? instance.toString()
         			   seeds.add(instance.getHostName());
         		}
         }
-if (seeds.isEmpty()) {
-logger.info("seed list empty, gonna have to fake it");
-seeds.add("127.0.0.1");
-} else {
-logger.info("returning " + seeds.size() + " seeds.");
-}
+        if (seeds.isEmpty()) {
+            logger.warn("Didn't find any other members in this ASG to use as seeds. Cassandra's not going to be happy..");
+        } else {
+            logger.info("returning " + seeds.size() + " seeds.");
+        }
         return seeds;
 
     }
