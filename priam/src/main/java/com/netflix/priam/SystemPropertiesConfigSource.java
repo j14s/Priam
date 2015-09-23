@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Loads {@link System#getProperties()} as a source.
@@ -40,6 +41,11 @@ public final class SystemPropertiesConfigSource extends AbstractConfigSource
                 data.put(key, value);
             }
         }
+    }
+
+    @Override
+    public Set<String> keySet() {
+        return data.keySet();
     }
 
     @Override

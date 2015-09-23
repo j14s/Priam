@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -82,6 +83,10 @@ public class PropertiesConfigSource extends AbstractConfigSource
         data.put(key, value);
     }
 
+    @Override
+    public Set<String> keySet() {
+        return data.keySet();
+    }
 
     @Override
     public int size() 

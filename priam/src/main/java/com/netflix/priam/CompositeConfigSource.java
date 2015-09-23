@@ -53,14 +53,16 @@ public class CompositeConfigSource extends AbstractConfigSource
         // start at top, make list of all items in source
         for (final IConfigSource source : sources)
         {
-            Iterator<String> i  = source.keySet().iterator();
-            while (i.hasNext()) {
-                String key = i.next();
-                // go down to other sources, only use value if it isn't in the list already
-                if (!allData.containsKey(key)) {
-                    String value = source.get(key);
-                    if (value != null && !value.isEmpty()) {
-                        allData.put(key, value);
+            if (source.keySet() != null) {
+                Iterator<String> i  = source.keySet().iterator();
+                while (i.hasNext()) {
+                    String key = i.next();
+                    // go down to other sources, only use value if it isn't in the list already
+                    if (!allData.containsKey(key)) {
+                        String value = source.get(key);
+                        if (value != null && !value.isEmpty()) {
+                            allData.put(key, value);
+                        }
                     }
                 }
             }

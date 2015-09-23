@@ -64,14 +64,16 @@ public class CassandraConfig
             final List<String> seeds = priamServer.getId().getSeeds();
             if (!seeds.isEmpty())
                 return Response.ok(StringUtils.join(seeds, ',')).build();
-            logger.error("Cannot find the Seeds");
+            else {
+                logger.error("Cannot find the Seeds; Adding localhost to keep Cassandra happy for a few minutes.");
+                return Response.ok("127.0.0.1").build();
+            }
         }
         catch (Exception e)
         {
             logger.error("Error while executing get_seeds", e);
             return Response.serverError().build();
         }
-        return Response.status(500).build();
     }
 
     @GET
