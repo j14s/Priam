@@ -111,12 +111,12 @@ public class CompositeConfigSource extends AbstractConfigSource
     @Override
     public String get(final String key) 
     {
-        logger.info("Getting value for:" + key);
+        logger.trace("Getting value for:" + key);
         Preconditions.checkNotNull(key);
         for (final IConfigSource c : sources) 
         {
             final String value = c.get(key);
-            logger.info(c.toString() + "has value :" + value);
+            logger.trace("{} has value :{}",c.toString(),value);
             if (value != null)
             {
                 return value;

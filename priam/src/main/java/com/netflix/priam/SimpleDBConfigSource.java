@@ -37,6 +37,7 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
     private final ICredential provider;
 
     private String appid;
+    private String[] excludeProps = new String[] {"priam.az.region", "priam.az.asgname","priam.acl.groupname"};
 
     @Inject
     public SimpleDBConfigSource(final ICredential provider) 
@@ -129,6 +130,7 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
         // create a put request with attributes
         List<ReplaceableAttribute> attrs = new ArrayList<ReplaceableAttribute>();
         for (String key : data.keySet()) {
+            if (Arrays.binarySearch(excludeProps,key) > -1) continue;
             String value = data.get(key);
             if (value != null && !value.isEmpty())
                 attrs.add(new ReplaceableAttribute(key, value, false)); // lazy way of making sure we don't overwrite if this was all some kind of mistake
