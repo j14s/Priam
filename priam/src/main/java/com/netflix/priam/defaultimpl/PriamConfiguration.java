@@ -74,6 +74,7 @@ public class PriamConfiguration implements IConfiguration
     private static final String CONFIG_CASS_PROCESS_NAME = PRIAM_PRE + ".cass.process";
     private static final String CONFIG_VNODE_NUM_TOKENS = PRIAM_PRE + ".vnodes.numTokens";
     private static final String CONFIG_YAML_LOCATION = PRIAM_PRE + ".yamlLocation";
+    private static final String CONFIG_PIDFILE_LOCATION = PRIAM_PRE + ".pidFileLocation";
     private static final String CONFIG_AUTHENTICATOR = PRIAM_PRE + ".authenticator";
     private static final String CONFIG_AUTHORIZER = PRIAM_PRE + ".authorizer";
     private static final String CONFIG_TARGET_KEYSPACE_NAME = PRIAM_PRE + ".target.keyspace";
@@ -181,6 +182,7 @@ public class PriamConfiguration implements IConfiguration
     private final String DEFAULT_PARTITIONER = "org.apache.cassandra.dht.RandomPartitioner";
     public static final String DEFAULT_AUTHENTICATOR = "org.apache.cassandra.auth.AllowAllAuthenticator";
     public static final String DEFAULT_AUTHORIZER = "org.apache.cassandra.auth.AllowAllAuthorizer";
+    private final String DEFAULT_PIDFILE_LOCATION = "/var/run/cassandra/cassandra.pid";
 
     // rpm based. Can be modified for tar based.
     private final String DEFAULT_CASS_HOME_DIR = "/etc/cassandra";
@@ -226,6 +228,8 @@ public class PriamConfiguration implements IConfiguration
     private final String BLANK = "";
     private static final Logger logger = LoggerFactory.getLogger(PriamConfiguration.class);
     private final ICredential provider;
+
+    private String securityGroupId;
 
     @Inject
     public PriamConfiguration(ICredential provider, IConfigSource config)
@@ -389,7 +393,12 @@ public class PriamConfiguration implements IConfiguration
     @Override
     public String getBackupPrefix()
     {
-        return config.get(CONFIG_BUCKET_NAME, DEFAULT_BUCKET_NAME);
+        String rv;
+        rv = config.get(CONFIG_BUCKET_NAME, DEFAULT_BUCKET_NAME);
+        // allow for different buckets in different regions.
+        if (isMultiDC())
+            rv = getDC() + "-" + rv;
+        return rv;
     }
 
     @Override
@@ -599,6 +608,16 @@ public class PriamConfiguration implements IConfiguration
     }
 
     @Override
+    public String getACLGroupId() {
+        return securityGroupId;
+    }
+
+    @Override
+    public void setACLGroupId(String s) {
+        securityGroupId = s;
+    }
+
+    @Override
     public boolean isIncrBackup()
     {
         return config.get(CONFIG_INCR_BK_ENABLE, true);
@@ -607,7 +626,7 @@ public class PriamConfiguration implements IConfiguration
     @Override
     public String getHostIP()
     {
-        if (this.isVpcRing()) return LOCAL_IP;
+        if (this.isVpcRing() && !this.isMultiDC()) return LOCAL_IP;
         else return PUBLIC_IP;
     }
 
@@ -717,6 +736,11 @@ public class PriamConfiguration implements IConfiguration
     public int getNumTokens()
     {
         return config.get(CONFIG_VNODE_NUM_TOKENS, DEFAULT_VNODE_NUM_TOKENS);
+    }
+
+    @Override
+    public String getPIDFileLocation() {
+        return config.get(CONFIG_PIDFILE_LOCATION, DEFAULT_PIDFILE_LOCATION);
     }
 
     public String getYamlLocation()

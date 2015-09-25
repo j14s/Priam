@@ -38,6 +38,12 @@ public interface IConfiguration
     public String getYamlLocation();
 
     /**
+     * This replaces the grep for the cassandra process.. should be more reliable
+     * @return the location (including filename) of the Cassandra pid file.
+     */
+    public String getPIDFileLocation();
+
+    /**
      * @return The IConfigSource initialized with
      */
     IConfigSource getConfigSource();
@@ -240,6 +246,18 @@ public interface IConfiguration
      * Get the security group associated with nodes in this cluster
      */
     public String getACLGroupName();
+
+    /**
+     * @return the Group Id of the Security Group.
+     */
+    public String getACLGroupId();
+
+    /**
+     * AWS doesn't allow using Security Group's name for access when using a VPC
+     * This is set by the AWSMembership class the first time the SG is accessed.
+     * @param s the security group id
+     */
+    public void setACLGroupId(String s);
 
     /**
      * @return true if incremental backups are enabled

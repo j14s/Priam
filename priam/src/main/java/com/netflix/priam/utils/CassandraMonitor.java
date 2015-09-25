@@ -49,10 +49,12 @@ public class CassandraMonitor extends Task{
 
         try
         {
-        		//This returns pid for the Cassandra process
-        		Process p = Runtime.getRuntime().exec("pgrep -f " + config.getCassProcessName());
-        		BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            //This returns pid for the Cassandra process
+            Process p = Runtime.getRuntime().exec("pgrep -f " + config.getCassProcessName());
+            // Process p = Runtime.getRuntime().exec("cat " + config.getPIDFileLocation());
+            BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line = input.readLine();
+            logger.debug("Expecting Cassandra process has PID {}",line);
         		if (line != null&& !isCassadraStarted())
         		{
         			//Setting cassandra flag to true

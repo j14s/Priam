@@ -37,7 +37,8 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
     private final ICredential provider;
 
     private String appid;
-    private String[] excludeProps = new String[] {"priam.az.region", "priam.az.asgname","priam.acl.groupname"};
+    // list of regions specific properties. Don't send to sdb.
+    private String[] excludeProps = new String[] {"priam.acl.groupname", "priam.az.asgname", "priam.az.region"}; // don't forget to sort
 
     @Inject
     public SimpleDBConfigSource(final ICredential provider) 
@@ -133,8 +134,7 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
             if (Arrays.binarySearch(excludeProps,key) > -1) continue;
             String value = data.get(key);
             if (value != null && !value.isEmpty())
-                attrs.add(new ReplaceableAttribute(key, value, false)); // lazy way of making sure we don't overwrite if this was all some kind of mistake
-
+                attrs.add(new ReplaceableAttribute(key, value, false)); // use false as lazy way of making sure we don't overwrite if this was all some kind of mistake
         }
         try {
             AmazonSimpleDBClient simpleDBClient = new AmazonSimpleDBClient(provider.getAwsCredentialProvider());

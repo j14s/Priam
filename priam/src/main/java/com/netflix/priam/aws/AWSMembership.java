@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import com.amazonaws.services.ec2.model.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +34,6 @@ import com.amazonaws.services.autoscaling.model.Instance;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.AuthorizeSecurityGroupIngressRequest;
-import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
-import com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult;
-import com.amazonaws.services.ec2.model.IpPermission;
-import com.amazonaws.services.ec2.model.RevokeSecurityGroupIngressRequest;
-import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.netflix.priam.IConfiguration;
@@ -134,7 +129,8 @@ public class AWSMembership implements IMembership
             client = getEc2Client();
             List<IpPermission> ipPermissions = new ArrayList<IpPermission>();
             ipPermissions.add(new IpPermission().withFromPort(from).withIpProtocol("tcp").withIpRanges(listIPs).withToPort(to));
-            client.authorizeSecurityGroupIngress(new AuthorizeSecurityGroupIngressRequest(config.getACLGroupName(), ipPermissions));
+            client.authorizeSecurityGroupIngress(new AuthorizeSecurityGroupIngressRequest().withGroupId(config.getACLGroupId()).withIpPermissions(ipPermissions));
+            // client.authorizeSecurityGroupIngress(new AuthorizeSecurityGroupIngressRequest(config.getACLGroupName(), ipPermissions));
             logger.info("Done adding ACL to: " + StringUtils.join(listIPs, ","));
         }
         finally
@@ -155,7 +151,8 @@ public class AWSMembership implements IMembership
             client = getEc2Client();
             List<IpPermission> ipPermissions = new ArrayList<IpPermission>();
             ipPermissions.add(new IpPermission().withFromPort(from).withIpProtocol("tcp").withIpRanges(listIPs).withToPort(to));
-            client.revokeSecurityGroupIngress(new RevokeSecurityGroupIngressRequest(config.getACLGroupName(), ipPermissions));
+            // client.revokeSecurityGroupIngress(new RevokeSecurityGroupIngressRequest(config.getACLGroupName(), ipPermissions));
+            client.revokeSecurityGroupIngress(new RevokeSecurityGroupIngressRequest().withGroupId(config.getACLGroupId()).withIpPermissions(ipPermissions));
             logger.info("Done removing from ACL: " + StringUtils.join(listIPs, ","));
         }
         finally
@@ -175,12 +172,18 @@ public class AWSMembership implements IMembership
         {
             client = getEc2Client();
             List<String> ipPermissions = new ArrayList<String>();
-            DescribeSecurityGroupsRequest req = new DescribeSecurityGroupsRequest().withGroupNames(Arrays.asList(config.getACLGroupName()));
+            // DescribeSecurityGroupsRequest req = new DescribeSecurityGroupsRequest().withGroupNames(Arrays.asList(config.getACLGroupName()));
+            // query by group name not allowed in Amazon VPC .. use filters to get the same thing
+            DescribeSecurityGroupsRequest req = new DescribeSecurityGroupsRequest().withFilters(new Filter("group-name",Arrays.asList(config.getACLGroupName())));
             DescribeSecurityGroupsResult result = client.describeSecurityGroups(req);
-            for (SecurityGroup group : result.getSecurityGroups())
+            for (SecurityGroup group : result.getSecurityGroups()) {
+                logger.debug("Found a security group:{}", group.getGroupName());
+                config.setACLGroupId(group.getGroupId());
                 for (IpPermission perm : group.getIpPermissions())
                     if (perm.getFromPort() == from && perm.getToPort() == to)
                         ipPermissions.addAll(perm.getIpRanges());
+            }
+            logger.debug("Found {} ip ranges in the security group",ipPermissions.size());
             return ipPermissions;
         }
         finally

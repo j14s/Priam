@@ -20,6 +20,7 @@ public class FakeConfiguration implements IConfiguration
     public String zone;
     public String instance_id;
     public String restorePrefix;
+    public String sgId;
 
     public FakeConfiguration()
     {
@@ -171,6 +172,16 @@ public class FakeConfiguration implements IConfiguration
     public String getACLGroupName()
     {
         return this.getAppName();
+    }
+
+    @Override
+    public String getACLGroupId() {
+        return sgId;
+    }
+
+    @Override
+    public void setACLGroupId(String s) {
+        this.sgId = s;
     }
 
     @Override
@@ -423,10 +434,9 @@ public class FakeConfiguration implements IConfiguration
         return 1;
     }
 
-    public String getYamlLocation()
-    {
-        return "conf/cassandra.yaml";
-    }
+    public String getPIDFileLocation() { return "/var/run/cassandra";}
+
+    public String getYamlLocation() { return "conf/cassandra.yaml"; }
 
     @Override
     public IConfigSource getConfigSource() {

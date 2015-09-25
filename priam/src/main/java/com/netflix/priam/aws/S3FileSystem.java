@@ -94,7 +94,8 @@ public class S3FileSystem extends S3FileSystemBase implements IBackupFileSystem,
         }        
         
         super.s3Client = new AmazonS3Client(cred.getAwsCredentialProvider());
-        super.s3Client.setEndpoint(super.getS3Endpoint(this.config));
+        // super.s3Client.setEndpoint(super.getS3Endpoint(this.config));
+        super.s3Client.setEndpoint("s3-external-1.amazonaws.com");
     }
 
     @Override
