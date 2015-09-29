@@ -243,11 +243,7 @@ public class PriamConfiguration implements IConfiguration
         catch (RuntimeException ex) {
             // swallow
         }
-        // sanity check, does config have any instances besides myself?
-        // if so, continue on
-        // if not check if config has been saved to sdb, save if not
-        //        reconfig without autobootstrap,
-        //        tricky .. once other seeds join, stop/reconfig/start
+
         try {
             p_ip = SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/public-ipv4").trim();
         }

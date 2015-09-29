@@ -47,7 +47,8 @@ public class TuneCassandra extends Task
     	
     	while (!isDone) {
     	  try {
-              tuner.writeAllProperties(config.getYamlLocation(), null, config.getSeedProviderName());
+              // tuner.writeAllProperties(config.getYamlLocation(), null, config.getSeedProviderName());
+              tuner.writeAllProperties(config.getYamlLocation(), config.getHostIP(), config.getSeedProviderName());
               isDone = true;
     	   } catch (IOException e) {
               LOGGER.info("Fail writing " + config.getYamlLocation() + ". Retry again, endlessly and with no hope of ever working!");

@@ -43,12 +43,18 @@ public class StandardTuner implements CassandraTuner
         map.put("cluster_name", config.getAppName());
         map.put("storage_port", config.getStoragePort());
         map.put("ssl_storage_port", config.getSSLStoragePort());
-        map.put("start_rpc", config.isThriftEnabled());
-        map.put("rpc_port", config.getThriftPort());
+        if (config.isThriftEnabled()) {
+            map.put("start_rpc", true);
+            map.put("rpc_port", config.getThriftPort());
+            map.put("rpc_min_threads", 4); // Defaults are no good with default rpc type
+            map.put("rpc_max_threads", 16); // Defaults are no good with default rpc type
+            map.put("rpc_server_type", config.getRpcServerType());
+        } else
+            map.put("start_rpc", false);
+        map.put("rpc_address", hostname);
         map.put("start_native_transport", config.isNativeTransportEnabled());
         map.put("native_transport_port", config.getNativeTransportPort());
         map.put("listen_address", hostname);
-        map.put("rpc_address", hostname);
         //Dont bootstrap in restore mode
         if (!Restore.isRestoreEnabled(config)) {
             map.put("auto_bootstrap", config.getAutoBoostrap());
@@ -81,9 +87,6 @@ public class StandardTuner implements CassandraTuner
         map.put("concurrent_writes", config.getConcurrentWritesCnt());
         map.put("concurrent_compactors", config.getConcurrentCompactorsCnt());
         
-        map.put("rpc_min_threads","4");
-        map.put("rpc_max_threads","16");
-        map.put("rpc_server_type", config.getRpcServerType());
         //map.put("index_interval", config.getIndexInterval());
         
         List<?> seedp = (List) map.get("seed_provider");
