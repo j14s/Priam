@@ -49,12 +49,20 @@ public class StandardTuner implements CassandraTuner
             map.put("rpc_min_threads", 4); // Defaults are no good with default rpc type
             map.put("rpc_max_threads", 16); // Defaults are no good with default rpc type
             map.put("rpc_server_type", config.getRpcServerType());
-        } else
+        } else {
             map.put("start_rpc", false);
-        map.put("rpc_address", hostname);
+            map.remove("rpc_port");
+            map.remove("rpc_min_threads");
+            map.remove("rpc_max_threads");
+            map.remove("rpc_server_type");
+        }
+        // can't bind to these address for some reason, however, blank seems to work ok
+        // map.put("rpc_address", hostname);
+        map.put("rpc_address", "");
         map.put("start_native_transport", config.isNativeTransportEnabled());
         map.put("native_transport_port", config.getNativeTransportPort());
-        map.put("listen_address", hostname);
+        // map.put("listen_address", hostname);
+        map.put("listen_address", "");
         //Dont bootstrap in restore mode
         if (!Restore.isRestoreEnabled(config)) {
             map.put("auto_bootstrap", config.getAutoBoostrap());
@@ -169,6 +177,10 @@ public class StandardTuner implements CassandraTuner
         //the server-side (internode) ssl settings
         Map serverEnc = (Map)map.get("server_encryption_options");
         serverEnc.put("internode_encryption", config.getInternodeEncryption());
+        serverEnc.put("keystore", "/etc/cassandra/" + config.getDC() + "_keystore.jks");
+        serverEnc.put("keystore_password", "cassandra-server");
+        serverEnc.put("truststore", "/etc/cassandra/cassandra_truststore.jks");
+        serverEnc.put("truststore_password", "cassandra-server");
     }
 
     protected void configureCommitLogBackups() throws IOException
