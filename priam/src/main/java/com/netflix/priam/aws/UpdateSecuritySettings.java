@@ -71,44 +71,47 @@ public class UpdateSecuritySettings extends Task
     @Override
     public void execute()
     {
-        // if seed dont execute.
+        // acl range is a cidr, but in this case /32 is appended to make single IP a "range"
         int fPort = config.getStoragePort();
         int tPort = config.getSSLStoragePort();
-        List<String> acls = membership.listACL(fPort, tPort);
-        List<PriamInstance> instances = factory.getAllIds(config.getAppName());
+        List<String> acls = membership.listACL(fPort, tPort); // list of all the current ranges in SG
+        List<PriamInstance> allInstances = factory.getAllIds(config.getAppName()); // All instance Priam knows about
+        List<String> currentRanges = Lists.newArrayList(); // take the list of instances and get list of ranges
+        List<String> add = Lists.newArrayList(); // list of ranges to add to SG
+        List<String> remove = Lists.newArrayList(); // list of ranges to remove from SG
 
         // iterate to add...
-        List<String> add = Lists.newArrayList();
-        List<PriamInstance> allInstances = factory.getAllIds(config.getAppName());
+        // first time through, add my ip to the sg
+        if (status != STATE.STOPPING && !firstTimeUpdated) {
+            String range = config.getHostIP() + "/32"; // range for this instance
+            if (!acls.contains(range))
+                add.add(range);
+            firstTimeUpdated = true;
+        }
+
         for (PriamInstance instance : allInstances)
         {
             String range = instance.getHostIP() + "/32";
-            if (!acls.contains(range))
+            currentRanges.add(range); // list of ips priam knows about
+            // only add hosts from other DCs, hosts in this region should be managing themselves
+            if (instance.getDC() != config.getDC() && !acls.contains(range)) {
                 add.add(range);
-        }
-        if (add.size() > 0)
-        {
-            membership.addACL(add, fPort, tPort);
-            firstTimeUpdated = true;
-        }
-
-        // just iterate to generate ranges.
-        List<String> currentRanges = Lists.newArrayList();
-        for (PriamInstance instance : instances)
-        {
-            String range = instance.getHostIP() + "/32";
-            currentRanges.add(range);
+            }
         }
 
         // iterate to remove...
-        List<String> remove = Lists.newArrayList();
-        for (String acl : acls)
+        for (String acl : acls) {
             if (!currentRanges.contains(acl)) // if not found then remove....
                 remove.add(acl);
+        }
+        if (status == STATE.STOPPING) remove.add(config.getHostIP() + "/32");
+        if (add.size() > 0)
+        {
+            membership.addACL(add, fPort, tPort);
+        }
         if (remove.size() > 0)
         {
             membership.removeACL(remove, fPort, tPort);
-            firstTimeUpdated = true;
         }
     }
 

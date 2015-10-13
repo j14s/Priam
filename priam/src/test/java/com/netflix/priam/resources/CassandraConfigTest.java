@@ -66,7 +66,8 @@ public class CassandraConfigTest
         };
 
         Response response = resource.getSeeds();
-        assertEquals(500, response.getStatus());
+        assertEquals(200, response.getStatus());
+        assertEquals("127.0.0.1", response.getEntity());
     }
 
     @Test

@@ -93,7 +93,13 @@ public class PriamScheduler
             }
         }).start();
     }
-    
+
+    public void runTaskForLastTime(Class<? extends Task> taskclass) throws Exception
+    {
+        Task o = jobFactory.guice.getInstance(taskclass);
+        o.status = Task.STATE.STOPPING;
+        o.execute(null);
+    }
     public void runTaskNow(Class<? extends Task> taskclass) throws Exception
     {
         jobFactory.guice.getInstance(taskclass).execute(null);
@@ -113,7 +119,7 @@ public class PriamScheduler
     {
         try
         {
-            scheduler.shutdown();
+            scheduler.shutdown(true);
         }
         catch (SchedulerException e)
         {

@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.netflix.priam.aws.UpdateSecuritySettings;
+import com.netflix.priam.scheduler.PriamScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,10 +36,24 @@ import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 
+import javax.servlet.ServletContextEvent;
+
 public class InjectedWebListener extends GuiceServletContextListener
 {
     protected static final Logger logger = LoggerFactory.getLogger(InjectedWebListener.class);
-    
+    private static PriamScheduler scheduler;
+
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+        super.contextDestroyed(servletContextEvent);
+        try {
+            scheduler.runTaskForLastTime(UpdateSecuritySettings.class);
+            scheduler.shutdown();
+        } catch (Exception e) {
+            logger.error("Unable to remove myself from the security group! " + e.toString());
+        }
+    }
+
     @Override
     protected Injector getInjector()
     {
@@ -48,7 +64,9 @@ public class InjectedWebListener extends GuiceServletContextListener
         try
         {
             injector.getInstance(IConfiguration.class).intialize();
-            injector.getInstance(PriamServer.class).intialize();
+            PriamServer p = injector.getInstance(PriamServer.class);
+            p.intialize();
+            scheduler = p.getScheduler();
         }
         catch (Exception e)
         {

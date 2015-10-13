@@ -40,7 +40,7 @@ public abstract class Task implements Job, TaskMBean
 
     public static enum STATE
     {
-        ERROR, RUNNING, DONE
+        ERROR, RUNNING, STOPPING, DONE
     }
     protected final IConfiguration config;
     
