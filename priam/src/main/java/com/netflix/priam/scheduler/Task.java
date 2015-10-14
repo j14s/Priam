@@ -87,9 +87,9 @@ public abstract class Task implements Job, TaskMBean
         executions.incrementAndGet();
         try
         {
-            if (status == STATE.RUNNING)
+            if (status == STATE.RUNNING || status == STATE.STOPPING)
                 return;
-            status = STATE.RUNNING;
+            // if (status != STATE.STOPPING ) status = STATE.RUNNING; // don't change the state if this is the final call
             execute();
 
         }

@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.netflix.priam.aws.UpdateSecuritySettings;
+import com.netflix.priam.identity.IPriamInstanceFactory;
+import com.netflix.priam.identity.InstanceIdentity;
 import com.netflix.priam.scheduler.PriamScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,7 @@ public class InjectedWebListener extends GuiceServletContextListener
 {
     protected static final Logger logger = LoggerFactory.getLogger(InjectedWebListener.class);
     private static PriamScheduler scheduler;
+    private static InstanceIdentity identity;
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
@@ -49,8 +52,9 @@ public class InjectedWebListener extends GuiceServletContextListener
         try {
             scheduler.runTaskForLastTime(UpdateSecuritySettings.class);
             scheduler.shutdown();
+            identity.getFactory().delete(identity.getInstance());
         } catch (Exception e) {
-            logger.error("Unable to remove myself from the security group! " + e.toString());
+            logger.error("Unable to remove myself from the security group and/or instance list! " + e.toString());
         }
     }
 
@@ -67,6 +71,7 @@ public class InjectedWebListener extends GuiceServletContextListener
             PriamServer p = injector.getInstance(PriamServer.class);
             p.intialize();
             scheduler = p.getScheduler();
+            identity = p.getId();
         }
         catch (Exception e)
         {

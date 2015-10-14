@@ -29,6 +29,8 @@ import com.netflix.priam.identity.PriamInstance;
 import com.netflix.priam.scheduler.SimpleTimer;
 import com.netflix.priam.scheduler.Task;
 import com.netflix.priam.scheduler.TaskTimer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * this class will associate an Public IP's with a new instance so they can talk
@@ -50,6 +52,7 @@ public class UpdateSecuritySettings extends Task
     public static final String JOBNAME = "Update_SG";
     public static boolean firstTimeUpdated = false;
 
+    protected static final Logger logger = LoggerFactory.getLogger(UpdateSecuritySettings.class);
     private static final Random ran = new Random();
     private final IMembership membership;
     private final IPriamInstanceFactory<PriamInstance> factory;
@@ -83,7 +86,9 @@ public class UpdateSecuritySettings extends Task
         // iterate to add...
         // first time through, add my ip to the sg
         if (status != STATE.STOPPING && !firstTimeUpdated) {
-            String range = config.getHostIP() + "/32"; // range for this instance
+            // String range = config.getHostIP() + "/32"; // range for this instance
+            String range = config.getHostname() + "/32"; // range for this instance
+            logger.info("This is my first time.. adding range for this instance:" + range);
             if (!acls.contains(range))
                 add.add(range);
             firstTimeUpdated = true;
@@ -91,27 +96,38 @@ public class UpdateSecuritySettings extends Task
 
         for (PriamInstance instance : allInstances)
         {
-            String range = instance.getHostIP() + "/32";
-            currentRanges.add(range); // list of ips priam knows about
+            logger.trace("config.getDC=" + config.getDC());
+            logger.trace("instance.getDC=" + instance.getDC());
+            String range;
+            if (!instance.getDC().equals(config.getDC()))
+                range = instance.getHostIP() + "/32";
+            else
+                range = instance.getHostName() + "/32";
+            logger.debug("Grokking other ranges; found:" + range);
+            currentRanges.add(range); // list of ips priam knows about, should match the list of instances.
+            if (config.getHostname().equals(instance.getHostName())) continue;
             // only add hosts from other DCs, hosts in this region should be managing themselves
-            if (instance.getDC() != config.getDC() && !acls.contains(range)) {
+            if (!acls.contains(range)) {
                 add.add(range);
+                logger.debug(range + " was not found in current ACL.");
             }
         }
 
         // iterate to remove...
         for (String acl : acls) {
-            if (!currentRanges.contains(acl)) // if not found then remove....
+            if (!currentRanges.contains(acl)) {// if not found then remove....
                 remove.add(acl);
+                logger.debug(acl + " is being removed from ACL because I didn't find a matching instance.");
+            }
         }
-        if (status == STATE.STOPPING) remove.add(config.getHostIP() + "/32");
-        if (add.size() > 0)
-        {
-            membership.addACL(add, fPort, tPort);
-        }
+        if (status == STATE.STOPPING) remove.add(config.getHostname() + "/32");
         if (remove.size() > 0)
         {
             membership.removeACL(remove, fPort, tPort);
+        }
+        if (add.size() > 0)
+        {
+            membership.addACL(add, fPort, tPort);
         }
     }
 

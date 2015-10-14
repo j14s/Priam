@@ -114,6 +114,7 @@ public class InstanceIdentity
         init();
     }
 
+    public IPriamInstanceFactory getFactory() { return factory; }
     public PriamInstance getInstance()
     {
         return myInstance;
@@ -291,12 +292,15 @@ public class InstanceIdentity
             {	
                 logger.trace("I'm a seed node, but in a single zone instance?");
             	PriamInstance instance = locMap.get(myInstance.getRac()).get(1);
-                logger.debug("Location has an instance:" + (instance != null? instance.toString():"null"));
+                logger.debug("Location has an instance:" + (instance != null ? instance.toString() : "null"));
             	if (instance != null && !isInstanceDummy(instance))
             	{
-            	    if (config.isMultiDC())
-            		   seeds.add(instance.getHostIP());
-            	    else 
+            	    if (config.isMultiDC()) {
+                        logger.trace("multidc, config.getDC="+ config.getDC());
+                        logger.trace("multidc, instance.getDC="+ instance.getDC());
+                        if (config.getDC().equals(instance.getDC())) seeds.add(instance.getHostName());
+                        else seeds.add(instance.getHostIP());
+                    } else
             		   seeds.add(instance.getHostName());
                 } else {
                     logger.trace("Instance is no good.");
@@ -311,9 +315,12 @@ public class InstanceIdentity
             logger.debug("Location has an instance:" + (instance != null? instance.toString():"null"));
         		if (instance != null && !isInstanceDummy(instance))
         		{
-        			if (config.isMultiDC())
-        			   seeds.add(instance.getHostIP());
-        			else
+        			if (config.isMultiDC()) {
+                        logger.trace("multidc, config.getDC=" + config.getDC());
+                        logger.trace("multidc, instance.getDC=" + instance.getDC());
+                        if (config.getDC().equals(instance.getDC())) seeds.add(instance.getHostName());
+                        else seeds.add(instance.getHostIP());
+                    } else
         			   seeds.add(instance.getHostName());
         		}
         }

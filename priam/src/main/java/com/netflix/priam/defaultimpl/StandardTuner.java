@@ -56,13 +56,12 @@ public class StandardTuner implements CassandraTuner
             map.remove("rpc_max_threads");
             map.remove("rpc_server_type");
         }
-        // can't bind to these address for some reason, however, blank seems to work ok
-        // map.put("rpc_address", hostname);
-        map.put("rpc_address", "");
+        map.put("rpc_address", hostname);
+        // map.put("rpc_address", null);
         map.put("start_native_transport", config.isNativeTransportEnabled());
         map.put("native_transport_port", config.getNativeTransportPort());
-        // map.put("listen_address", hostname);
-        map.put("listen_address", "");
+        map.put("listen_address", hostname);
+        // map.put("listen_address", "");
         //Dont bootstrap in restore mode
         if (!Restore.isRestoreEnabled(config)) {
             map.put("auto_bootstrap", config.getAutoBoostrap());
