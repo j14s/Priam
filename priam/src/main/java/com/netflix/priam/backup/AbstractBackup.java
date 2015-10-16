@@ -79,14 +79,14 @@ public abstract class AbstractBackup extends Task
 
             try
             {
-                logger.info(String.format("Uploading file %s within CF %s for backup", file.getCanonicalFile(), parent.getAbsolutePath()));
+                logger.debug(String.format("Uploading file %s within CF %s for backup", file.getName(), parent.getCanonicalPath()));
                 AbstractBackupPath abp = new RetryableCallable<AbstractBackupPath>(3, RetryableCallable.DEFAULT_WAIT_TIME)
                 {
                     public AbstractBackupPath retriableCall() throws Exception
                     {
                         final AbstractBackupPath bp = pathFactory.get();
-			logger.info(String.format("Uploading backup to %s", bp.getRemotePath()));
                         bp.parseLocal(file, type);
+                        logger.debug(String.format("Uploading backup to %s", bp.getRemotePath()));
                         upload(bp);
                         file.delete();
                         return bp;
@@ -96,7 +96,7 @@ public abstract class AbstractBackup extends Task
                 if(abp != null)
                     bps.add(abp);
                 
-                logger.info(String.format("Uploaded file %s within CF %s for backup", file.getCanonicalFile(), parent.getAbsolutePath()));
+                logger.info(String.format("Uploaded file %s for backup", file.getCanonicalFile()));
                 addToRemotePath(abp.getRemotePath());
             }
             catch(Exception e)

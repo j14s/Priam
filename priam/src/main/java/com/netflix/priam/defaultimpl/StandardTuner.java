@@ -60,6 +60,8 @@ public class StandardTuner implements CassandraTuner
         // map.put("rpc_address", null);
         map.put("start_native_transport", config.isNativeTransportEnabled());
         map.put("native_transport_port", config.getNativeTransportPort());
+        // host ip is the elastic ip, hostname is the private ip
+        map.put("broadcast_address", config.getHostIP());
         map.put("listen_address", hostname);
         // map.put("listen_address", "");
         //Dont bootstrap in restore mode

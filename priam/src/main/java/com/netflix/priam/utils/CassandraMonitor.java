@@ -63,6 +63,7 @@ public class CassandraMonitor extends Task{
         		else if(line  == null&& isCassadraStarted())
         		{
         			//Setting cassandra flag to false
+                    logger.error("Cassandra node on this instance (id:" + config.getInstanceName() + ") has terminated unexpectedly!");
         			isCassandraStarted.set(false);
         		}
         }

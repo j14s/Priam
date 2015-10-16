@@ -59,8 +59,8 @@ public class IncrementalBackup extends AbstractBackup
     @Override
     public void execute() throws Exception
     {   	
-    		//Clearing remotePath List
-    		incrementalRemotePaths.clear();
+        //Clearing remotePath List
+        incrementalRemotePaths.clear();
         File dataDir = new File(config.getDataFileLocation());
         if (!dataDir.exists())
         {
