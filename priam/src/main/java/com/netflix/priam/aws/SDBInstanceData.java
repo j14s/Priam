@@ -24,14 +24,7 @@ import java.util.Set;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
-import com.amazonaws.services.simpledb.model.Attribute;
-import com.amazonaws.services.simpledb.model.DeleteAttributesRequest;
-import com.amazonaws.services.simpledb.model.Item;
-import com.amazonaws.services.simpledb.model.PutAttributesRequest;
-import com.amazonaws.services.simpledb.model.ReplaceableAttribute;
-import com.amazonaws.services.simpledb.model.SelectRequest;
-import com.amazonaws.services.simpledb.model.SelectResult;
-import com.amazonaws.services.simpledb.model.UpdateCondition;
+import com.amazonaws.services.simpledb.model.*;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.priam.ICredential;
@@ -77,11 +70,17 @@ public class SDBInstanceData
     public PriamInstance getInstance(String app, String dc, int id)
     {
         AmazonSimpleDBClient simpleDBClient = getSimpleDBClient();
+        GetAttributesRequest getAttributesRequest = new GetAttributesRequest(DOMAIN,app + "_" + dc + "_" + id);
+        GetAttributesResult getAttributesResult = simpleDBClient.getAttributes(getAttributesRequest);
+        List<Attribute> properties = getAttributesResult.getAttributes();
+        return transform(properties);
+
+        /*
         SelectRequest request = new SelectRequest(String.format(INSTANCE_QUERY, app, dc, id));
         SelectResult result = simpleDBClient.select(request);
         if (result.getItems().size() == 0)
             return null;
-        return transform(result.getItems().get(0));
+        */
     }
 
     /**
@@ -191,10 +190,13 @@ public class SDBInstanceData
      * @param item
      * @return
      */
-    public PriamInstance transform(Item item)
-    {
+    public PriamInstance transform(Item item) {
+        List<Attribute> attrs = item.getAttributes();
+        return transform(attrs);
+    }
+    public PriamInstance transform(List<Attribute> l) {
         PriamInstance ins = new PriamInstance();
-        Iterator<Attribute> attrs = item.getAttributes().iterator();
+        Iterator<Attribute> attrs = l.iterator();
         while (attrs.hasNext())
         {
             Attribute att = attrs.next();

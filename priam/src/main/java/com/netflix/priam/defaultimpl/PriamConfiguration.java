@@ -168,6 +168,7 @@ public class PriamConfiguration implements IConfiguration
     private final String INSTANCE_TYPE = SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/instance-type").trim();
     private static String ASG_NAME = System.getenv("ASG_NAME");
     private static String REGION = System.getenv("EC2_REGION");
+    private static String CLUSTER_NAME = System.getenv("CLUSTER_NAME");
     private static final String CONFIG_VPC_RING = PRIAM_PRE + ".vpc";
     private static final String CONFIG_ROLE_ASSUMPTION_ARN = PRIAM_PRE + ".roleassumption.arn"; //Restore from AWS.  This is applicable when restoring from an AWS account which requires cross account assumption. 
 
@@ -262,7 +263,7 @@ public class PriamConfiguration implements IConfiguration
     public void intialize()
     {
         setupEnvVars();
-        this.config.intialize(ASG_NAME, REGION);
+        this.config.intialize(CLUSTER_NAME, REGION);
         setDefaultRACList(REGION);
         populateProps();
         SystemUtils.createDirs(getBackupCommitLogLocation());
@@ -281,7 +282,8 @@ public class PriamConfiguration implements IConfiguration
         ASG_NAME = StringUtils.isBlank(ASG_NAME) ? System.getProperty("ASG_NAME") : ASG_NAME;
         if (StringUtils.isBlank(ASG_NAME))
             ASG_NAME = populateASGName(REGION, INSTANCE_ID);
-        logger.info(String.format("REGION set to %s, ASG Name set to %s", REGION, ASG_NAME));
+        CLUSTER_NAME = ASG_NAME.lastIndexOf('_') > 0 ? ASG_NAME.substring(0, ASG_NAME.indexOf('_')) : ASG_NAME;
+        logger.info(String.format("CLUSTER_NAME %s in REGION %s, ASG Name set to %s",CLUSTER_NAME, REGION, ASG_NAME));
     }
 
     /**
@@ -360,6 +362,7 @@ public class PriamConfiguration implements IConfiguration
     {
         config.set(CONFIG_ASG_NAME, ASG_NAME);
         config.set(CONFIG_REGION_NAME, REGION);
+        config.set(CONFIG_CLUSTER_NAME, CLUSTER_NAME);
     }
 
     @Override

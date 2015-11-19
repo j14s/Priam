@@ -15,13 +15,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class AbstractConfigSource implements IConfigSource 
 {
 
-    private String asgName;
+    private String clusterName;
     private String region;
 
     @Override
     public void intialize(final String asgName, final String region) 
     {
-        this.asgName = checkNotNull(asgName, "ASG name is not defined");
+        this.clusterName = checkNotNull(asgName, "ASG name is not defined");
         this.region = checkNotNull(region, "Region is not defined");
     }
 
@@ -186,9 +186,9 @@ public abstract class AbstractConfigSource implements IConfigSource
         return defaultValue;
     }
 
-    protected String getAsgName() 
+    protected String getClusterName()
     {
-        return asgName;
+        return clusterName;
     }
 
     protected String getRegion() 
@@ -207,7 +207,7 @@ public abstract class AbstractConfigSource implements IConfigSource
     }
     public String toString() {
         String rv = (this.getClass().toString());
-        return (rv + " for " + getAsgName() + " in " + getRegion());
+        return (rv + " for " + clusterName + " in " + getRegion());
     }
     public Set<String> keySet() { return null; }
     public void save() throws UnsupportedOperationException {

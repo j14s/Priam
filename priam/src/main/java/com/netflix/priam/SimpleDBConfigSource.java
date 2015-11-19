@@ -36,7 +36,7 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
     private final Map<String, String> data = Maps.newConcurrentMap();
     private final ICredential provider;
 
-    private String appid;
+    // private String appid;
     // list of regions specific properties. Don't send to sdb.
     private String[] excludeProps = new String[] {"priam.acl.groupname", "priam.az.asgname", "priam.az.region"}; // don't forget to sort
 
@@ -47,17 +47,27 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
     }
 
     @Override
-    public void intialize(final String asgName, final String region) 
+    public void intialize(final String clusterName, final String region)
     {
-        super.intialize(asgName, region);
+        super.intialize(clusterName, region);
 
         // End point is us-east-1
         AmazonSimpleDBClient simpleDBClient = new AmazonSimpleDBClient(provider.getAwsCredentialProvider());
 
-        String nextToken = null;
-        this.appid = asgName.lastIndexOf('-') > 0 ? asgName.substring(0, asgName.indexOf('-')) : asgName;
-        logger.info(String.format("appid used to fetch properties is: %s", appid));
-        do 
+        // String nextToken = null;
+        logger.info(String.format("cluster name used to fetch properties is: %s", clusterName));
+        GetAttributesRequest getAttributesRequest = new GetAttributesRequest(DOMAIN,clusterName);
+        GetAttributesResult getAttributesResult = simpleDBClient.getAttributes(getAttributesRequest);
+        List<Attribute> properties = getAttributesResult.getAttributes();
+        Iterator<Attribute> attrs = properties.iterator();
+        while (attrs.hasNext()) {
+            Attribute att = attrs.next();
+            data.put(att.getName(), att.getValue());
+            logger.debug("Adding property {} with value {}", att.getName(), att.getValue());
+        }
+        /*
+        addProperty(properties);
+        do
         {
             SelectRequest request = new SelectRequest(String.format(ALL_QUERY, appid));
             request.setNextToken(nextToken);
@@ -67,8 +77,9 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
             while (itemiter.hasNext())
               addProperty(itemiter.next());
 
-        } 
+        }
         while (nextToken != null);
+        */
     }
 
     private static class Attributes 
@@ -79,21 +90,27 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
         public final static String REGION = "region";
     }
 
-    private void addProperty(Item item) 
+    // private void addProperty(Item item)
+    private void addProperty(List<Attribute> attributeList)
     {
-        Iterator<Attribute> attrs = item.getAttributes().iterator();
+        // Iterator<Attribute> attrs = item.getAttributes().iterator();
+        Iterator<Attribute> attrs = attributeList.iterator();
         String prop = "";
         String value = "";
         String dc = "";
         while (attrs.hasNext()) 
         {
             Attribute att = attrs.next();
+            prop = att.getName();
+            value = att.getValue();
             if (att.getName().equals(Attributes.PROPERTY))
                 prop = att.getValue();
             else if (att.getName().equals(Attributes.PROPERTY_VALUE))
                 value = att.getValue();
-            else if (att.getName().equals(Attributes.REGION))
+            else if (att.getName().equals(Attributes.REGION)) {
                 dc = att.getValue();
+                logger.debug("found a region property: {}", dc);
+            }
         }
         // Ignore, if not this region
         if (StringUtils.isNotBlank(dc) && !dc.equals(getRegion()))
@@ -138,7 +155,7 @@ public final class SimpleDBConfigSource extends AbstractConfigSource
         }
         try {
             AmazonSimpleDBClient simpleDBClient = new AmazonSimpleDBClient(provider.getAwsCredentialProvider());
-            PutAttributesRequest putReq = new PutAttributesRequest(DOMAIN, appid, attrs);
+            PutAttributesRequest putReq = new PutAttributesRequest(DOMAIN, getClusterName(), attrs);
             simpleDBClient.putAttributes(putReq);
         }
         catch (AmazonServiceException ase) {

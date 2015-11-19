@@ -179,10 +179,12 @@ public class AWSMembership implements IMembership
             for (SecurityGroup group : result.getSecurityGroups()) {
                 logger.debug("Found a security group:{}", group.getGroupName());
                 config.setACLGroupId(group.getGroupId());
-                for (IpPermission perm : group.getIpPermissions())
+                logger.debug("Found a security groupid:{}", group.getGroupId());
+                for (IpPermission perm : group.getIpPermissions()) {
                     // get the current list of permissions on the port range..
                     if (perm.getFromPort() != null && perm.getFromPort() == from && perm.getToPort() != null && perm.getToPort() == to)
                         ipPermissions.addAll(perm.getIpRanges());
+                }
             }
             logger.debug("Found {} ip ranges in the security group",ipPermissions.size());
             return ipPermissions;

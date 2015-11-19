@@ -55,7 +55,7 @@ public class CassandraProcessManager implements ICassandraProcess
         {
             command.add(SUDO_STRING);
             command.add("-n");
-            command.add("-E");
+            // command.add("-E");
         }
         command.addAll(getStartCommand());
 
