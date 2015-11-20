@@ -169,6 +169,7 @@ public class PriamConfiguration implements IConfiguration
     private static String ASG_NAME = System.getenv("ASG_NAME");
     private static String REGION = System.getenv("EC2_REGION");
     private static String CLUSTER_NAME = System.getenv("CLUSTER_NAME");
+    private static String CLUSTER_ID = ""; // looks for a tag called CASSANDRA_CLUSTER_ID to derive CLUSTER_NAME, allows more flexible ASG names
     private static final String CONFIG_VPC_RING = PRIAM_PRE + ".vpc";
     private static final String CONFIG_ROLE_ASSUMPTION_ARN = PRIAM_PRE + ".roleassumption.arn"; //Restore from AWS.  This is applicable when restoring from an AWS account which requires cross account assumption. 
 
@@ -282,7 +283,11 @@ public class PriamConfiguration implements IConfiguration
         ASG_NAME = StringUtils.isBlank(ASG_NAME) ? System.getProperty("ASG_NAME") : ASG_NAME;
         if (StringUtils.isBlank(ASG_NAME))
             ASG_NAME = populateASGName(REGION, INSTANCE_ID);
-        CLUSTER_NAME = ASG_NAME.lastIndexOf('_') > 0 ? ASG_NAME.substring(0, ASG_NAME.indexOf('_')) : ASG_NAME;
+        CLUSTER_ID = populateClusterId(REGION, INSTANCE_ID);
+        if (!CLUSTER_ID.equals(""))
+            CLUSTER_NAME = CLUSTER_ID.lastIndexOf('_') > 0 ? CLUSTER_ID.substring(0, CLUSTER_ID.indexOf('_')) : CLUSTER_ID;
+        else
+            CLUSTER_NAME = ASG_NAME.lastIndexOf('_') > 0 ? ASG_NAME.substring(0, ASG_NAME.indexOf('_')) : ASG_NAME;
         logger.info(String.format("CLUSTER_NAME %s in REGION %s, ASG Name set to %s",CLUSTER_NAME, REGION, ASG_NAME));
     }
 
@@ -301,7 +306,51 @@ public class PriamConfiguration implements IConfiguration
             return null;
         }
     }
-    
+    private String populateClusterId(String region, String instanceId)
+    {
+        GetClusterId getClusterId = new GetClusterId(region, instanceId);
+
+        try {
+            return getClusterId.call();
+        } catch (Exception e) {
+            logger.error("Failed to determine cluster id.", e);
+            return null;
+        }
+    }
+    private class GetClusterId extends RetryableCallable<String>
+    {
+        private static final int NUMBER_OF_RETRIES = 15;
+        private static final long WAIT_TIME = 30000;
+        private final String region;
+        private final String instanceId;
+        private final AmazonEC2 client;
+
+        public GetClusterId(String region, String instanceId) {
+            super(NUMBER_OF_RETRIES, WAIT_TIME);
+            this.region = region;
+            this.instanceId = instanceId;
+            client = new AmazonEC2Client(provider.getAwsCredentialProvider());
+            client.setEndpoint("ec2." + region + ".amazonaws.com");
+        }
+
+        @Override
+        // public String retriableCall() throws IllegalStateException {
+        public String retriableCall() throws Exception {
+            DescribeInstancesRequest desc = new DescribeInstancesRequest().withInstanceIds(instanceId);
+            DescribeInstancesResult res = client.describeInstances(desc);
+
+            for (Reservation resr : res.getReservations()) {
+                for (Instance ins : resr.getInstances()) {
+                    for (com.amazonaws.services.ec2.model.Tag tag : ins.getTags()) {
+                        if (tag.getKey().equals("CASSANDRA_CLUSTER_ID"))
+                            return tag.getValue();
+                    }
+                }
+            }
+            logger.warn("Didn't find CASSANDRA_CLUSTER_ID tag, will use ASG name");
+            return "";
+        }
+    }
     private class GetASGName extends RetryableCallable<String>
     {
         private static final int NUMBER_OF_RETRIES = 15;
@@ -322,6 +371,7 @@ public class PriamConfiguration implements IConfiguration
         public String retriableCall() throws IllegalStateException {
             DescribeInstancesRequest desc = new DescribeInstancesRequest().withInstanceIds(instanceId);
             DescribeInstancesResult res = client.describeInstances(desc);
+            String rv = ""; // hold the asg name in case we don't find a cluster id set
     
             for (Reservation resr : res.getReservations())
             {
@@ -334,8 +384,8 @@ public class PriamConfiguration implements IConfiguration
                     }
                 }
             }
-            
-            logger.warn("Couldn't determine ASG name");
+
+            logger.error("Couldn't determine ASG name");
             throw new IllegalStateException("Couldn't determine ASG name");
         }
     }

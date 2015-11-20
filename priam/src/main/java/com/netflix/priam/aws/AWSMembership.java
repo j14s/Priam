@@ -176,6 +176,11 @@ public class AWSMembership implements IMembership
             // query by group name not allowed in Amazon VPC .. use filters to get the same thing
             DescribeSecurityGroupsRequest req = new DescribeSecurityGroupsRequest().withFilters(new Filter("group-name",Arrays.asList(config.getACLGroupName())));
             DescribeSecurityGroupsResult result = client.describeSecurityGroups(req);
+            if (result.getSecurityGroups().isEmpty()) { // re-run search for tag
+                logger.debug("Didn't find a security group named {}, trying to find by tag.", config.getACLGroupName());
+                req = new DescribeSecurityGroupsRequest().withFilters(new Filter("tag-key", Arrays.asList(("Name")))).withFilters(new Filter("tag-value", Arrays.asList(config.getACLGroupName())));
+                result = client.describeSecurityGroups(req);
+            }
             for (SecurityGroup group : result.getSecurityGroups()) {
                 logger.debug("Found a security group:{}", group.getGroupName());
                 config.setACLGroupId(group.getGroupId());
