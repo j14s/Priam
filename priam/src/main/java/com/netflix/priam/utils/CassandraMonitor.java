@@ -28,6 +28,7 @@ import com.netflix.priam.IConfiguration;
 import com.netflix.priam.scheduler.SimpleTimer;
 import com.netflix.priam.scheduler.Task;
 import com.netflix.priam.scheduler.TaskTimer;
+import org.apache.commons.io.IOUtils;
 
 /*
  * This task checks if the Cassandra process is running.
@@ -47,12 +48,14 @@ public class CassandraMonitor extends Task{
 	@Override
 	public void execute() throws Exception {
 
+        BufferedReader input = null;
+        Process p = null;
         try
         {
             //This returns pid for the Cassandra process
             // Process p = Runtime.getRuntime().exec("pgrep -f " + config.getCassProcessName());
-            Process p = Runtime.getRuntime().exec("pgrep -F " + config.getPIDFileLocation());
-            BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            p = Runtime.getRuntime().exec("pgrep -F " + config.getPIDFileLocation());
+            input = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line = input.readLine();
             logger.debug("Expecting Cassandra process has PID {}",line);
         		if (line != null&& !isCassadraStarted())
@@ -66,12 +69,16 @@ public class CassandraMonitor extends Task{
                     logger.error("Cassandra node on this instance (id:" + config.getInstanceName() + ") has terminated unexpectedly!");
         			isCassandraStarted.set(false);
         		}
+            input.close();
         }
         catch(Exception e)
         {
         		logger.warn("Exception thrown while checking if Cassandra is running or not ", e);
             //Setting Cassandra flag to false
             isCassandraStarted.set(false);
+        } finally {
+            IOUtils.closeQuietly(input);
+            p.destroy();
         }
 		
 	}

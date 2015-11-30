@@ -161,8 +161,8 @@ public class S3FileSystem extends S3FileSystemBase implements IBackupFileSystem,
                final String requestId = responseMetadata.getRequestId(); // "x-amz-request-id" header
                final String hostId = responseMetadata.getHostId(); // "x-amz-id-2" header
                logger.debug("S3 AWS x-amz-request-id[" + requestId + "], and x-amz-id-2[" + hostId + "]");
-            }  
-            
+            }
+            in.close();
         }
         catch (Exception e)
         {

@@ -86,25 +86,32 @@ public class UpdateSecuritySettings extends Task
         // iterate to add...
         // first time through, add my ip to the sg
         if (status != STATE.STOPPING && !firstTimeUpdated) {
-            // String range = config.getHostIP() + "/32"; // range for this instance
-            String range = config.getHostname() + "/32"; // range for this instance
-            logger.info("This is my first time.. adding range for this instance:" + range);
+            String range = config.getHostname() + "/32"; // add the private IP
+            logger.info("This is my first time.. adding private range for this instance:" + range);
+            if (!acls.contains(range))
+                add.add(range);
+            range = config.getHostIP() + "/32"; // add the public address
+            logger.info("This is my first time.. adding publi range for this instance:" + range);
             if (!acls.contains(range))
                 add.add(range);
             firstTimeUpdated = true;
         }
 
+        // build list of current ranges we _should_ have in the SG
+        // plus, add ranges from other regions
         for (PriamInstance instance : allInstances)
         {
             logger.trace("config.getDC=" + config.getDC());
             logger.trace("instance.getDC=" + instance.getDC());
             String range;
-            if (!instance.getDC().equals(config.getDC()))
-                range = instance.getHostIP() + "/32";
-            else
-                range = instance.getHostName() + "/32";
+            if (instance.getDC().equals(config.getDC()))
+                currentRanges.add( instance.getHostName() + "/32" ); // private
+
+            range = instance.getHostIP() + "/32";
+            currentRanges.add(range); // public
+
             logger.debug("Grokking other ranges; found:" + range);
-            currentRanges.add(range); // list of ips priam knows about, should match the list of instances.
+            // if my host, add to current, but not to add (because it was done above)
             if (config.getHostname().equals(instance.getHostName())) continue;
             // only add hosts from other DCs, hosts in this region should be managing themselves
             if (!acls.contains(range)) {
@@ -120,7 +127,10 @@ public class UpdateSecuritySettings extends Task
                 logger.debug(acl + " is being removed from ACL because I didn't find a matching instance.");
             }
         }
-        if (status == STATE.STOPPING) remove.add(config.getHostname() + "/32");
+        if (status == STATE.STOPPING) {
+            remove.add(config.getHostname() + "/32");
+            remove.add(config.getHostIP() + "/32");
+        }
         if (remove.size() > 0)
         {
             membership.removeACL(remove, fPort, tPort);
