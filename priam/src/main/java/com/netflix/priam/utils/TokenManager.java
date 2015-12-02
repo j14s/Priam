@@ -24,8 +24,11 @@ import com.google.common.collect.Ordering;
 
 public class TokenManager implements ITokenManager
 {    
-    public static final BigInteger MINIMUM_TOKEN = BigInteger.ZERO;
-    public static final BigInteger MAXIMUM_TOKEN = new BigInteger("2").pow(127);
+    // public static final BigInteger MINIMUM_TOKEN = BigInteger.ZERO;
+    // public static final BigInteger MAXIMUM_TOKEN = new BigInteger("2").pow(127);
+    public static final BigInteger MINIMUM_TOKEN = new BigInteger("2").pow(63).negate();
+    public static final BigInteger MAXIMUM_TOKEN = new BigInteger("2").pow(63).subtract(BigInteger.ONE);
+
 
     /**
      * Calculate a token for the given position, evenly spaced from other size-1 nodes.  See
@@ -45,9 +48,10 @@ public class TokenManager implements ITokenManager
          * unit test failures.
          */
         Preconditions.checkArgument(position >= 0, "position must be >= 0");
-        return MAXIMUM_TOKEN.divide(BigInteger.valueOf(size))
+        BigInteger token =  MAXIMUM_TOKEN.divide(BigInteger.valueOf(size))
                 .multiply(BigInteger.valueOf(position))
                 .add(BigInteger.valueOf(offset));
+        return token.compareTo(MAXIMUM_TOKEN)>0?token.subtract(MAXIMUM_TOKEN).add(MINIMUM_TOKEN):token;
     }
 
     /**
