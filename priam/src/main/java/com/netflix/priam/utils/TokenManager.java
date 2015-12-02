@@ -48,10 +48,10 @@ public class TokenManager implements ITokenManager
          * unit test failures.
          */
         Preconditions.checkArgument(position >= 0, "position must be >= 0");
-        BigInteger token =  MAXIMUM_TOKEN.divide(BigInteger.valueOf(size))
+        return new BigInteger("2").pow(64)
+                .divide(BigInteger.valueOf(size))
                 .multiply(BigInteger.valueOf(position))
-                .add(BigInteger.valueOf(offset));
-        return token.compareTo(MAXIMUM_TOKEN)>0?token.subtract(MAXIMUM_TOKEN).add(MINIMUM_TOKEN):token;
+                .add(MINIMUM_TOKEN);
     }
 
     /**
