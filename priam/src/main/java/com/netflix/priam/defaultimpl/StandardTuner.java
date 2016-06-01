@@ -174,6 +174,9 @@ public class StandardTuner implements CassandraTuner
         //the client-side ssl settings
         Map clientEnc = (Map) map.get("client_encryption_options");
         clientEnc.put("enabled", config.isClientSslEnabled());
+        clientEnc.put("optional", "true");
+        clientEnc.put("keystore", "/etc/cassandra/clp_cassandra_keystore.jks");
+        clientEnc.put("keystore_password", "cassandra");
 
         //the server-side (internode) ssl settings
         Map serverEnc = (Map)map.get("server_encryption_options");
