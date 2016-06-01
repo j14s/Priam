@@ -109,7 +109,9 @@ public class PriamServer
         scheduler.runTaskNow(TuneCassandra.class);
 
         // Determine if we need to restore from backup else start cassandra.
-        if (!config.getRestoreSnapshot().equals("")) {
+        // if (!config.getRestoreSnapshot().equals("")) {
+        // DISABLED here while looking for memory leak
+        if (false) {
 
             if (config.getRestoreSourceType() == null || config.getRestoreSourceType().equals("") ) {
                 //Restore is needed and it will be done from the primary AWS account
