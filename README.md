@@ -23,4 +23,4 @@ Features:
 - REST APIs for backup/restore and other operations
 
 Compatibility:
-Please see https://github.com/Netflix/Priam/wiki/Compatibility for details.
+This is a custom version for supporting EC2 instances on Cassandra 2.x+ and 3.x using virtual nodes

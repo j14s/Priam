@@ -5,6 +5,7 @@ import java.util.List;
 import com.netflix.priam.utils.ITokenManager;
 
 import org.junit.Test;
+import org.junit.Ignore;
 
 import com.google.common.collect.Lists;
 import com.netflix.priam.identity.DoubleRing;
@@ -18,7 +19,7 @@ public class DoubleRingTest extends InstanceTestUtils
 {
     private static final ITokenManager tokenManager = new TokenManager();
 
-    @Test
+    @Ignore @Test
     public void testDouble() throws Exception
     {
         createInstances();
